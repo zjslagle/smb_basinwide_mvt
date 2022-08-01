@@ -25,7 +25,7 @@ for(i in 1:length(interesting_fish)){
   #get bounding box and important stats
   bound_box <- detection_lines %>% filter(transmitter_id == target_fish) %>% st_bbox()
   total_dist_km = target_fish_line$total_dist_km
-  last_detected = target_fish_line$last_detected
+  last_detected = target_fish_line$date_last_detected
   
 #map it!
   ggplot()+
@@ -64,7 +64,7 @@ for(i in 1:length(interesting_fish)){
   
   ggsave(filename = paste("figures/basin movement maps/basinwide map ",target_fish, ".png", sep = ""),
          plot = basinwide_map,
-         width = 7, height = 7, units = "in", dpi = 300)
+         width = 7, height = 7, units = "in", dpi = 300) # wide = w10,h6
 }
 
 

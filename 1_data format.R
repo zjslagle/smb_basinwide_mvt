@@ -1,5 +1,8 @@
 # where did the SMB go in the main lake?
 
+require("gdistance");
+require("sp"); 
+require("gganimate")
 library(ggpubr)
 library(mapview)
 #library(export)
@@ -19,8 +22,8 @@ release_site = st_as_sf(data.frame(Name = "Shelby St Boat Ramp", "Latitude" = 41
 
 fish_and_rec_data <- read_glatos_workbook("data/GLATOSWeb_Submission_Package/GLATOSWeb_Slagle_Data_no_macros.xlsx")
 
-lake_detections <- read_glatos_detections("data/GLATOS Export/SBSMB_detectionsWithLocs_20220120_192431.csv")
-lake_receivers <- read_glatos_receivers("data/GLATOS Export/GLATOS_receiverLocations_20220111_180420.csv")
+lake_detections <- read_glatos_detections("data/GLATOS Export/SBSMB_detectionsWithLocs_20220622_202614.csv")
+lake_receivers <- read_glatos_receivers("data/GLATOS Export/GLATOS_receiverLocations_20220617_131806.csv")
 
 # format data
 head(lake_detections)
@@ -57,6 +60,23 @@ lake_detections_filtered <- filter(lake_detections, passed_filter_modified==1) %
   as_tibble
   #filter(!transmitter_id %in% c("24046", "24060", "24054", "24059")) # filter out dead and unknown fates
 
+# simple feature of receivers by study year
+# note - this ONLY includes receivers that detected bass!
+receivers_by_year <- lake_detections_filtered %>%
+  mutate(study_year = case_when(detection_date < release_date+365 ~ 1,
+                                detection_date %in% seq(release_date+365, 
+                                                        release_date+730, by = 1) ~ 2,
+                                detection_date %in% seq(release_date+730, 
+                                                        release_date+1095, by = 1) ~ 3,
+                                T ~ 4)) %>%
+  group_by(station, study_year, deploy_lat, deploy_long) %>%
+  summarize(n_detections = n(),
+            initial_date = min(detection_date),
+            last_date = max(detection_date)) %>%
+  arrange(study_year, station) %>%
+  st_as_sf(coords = c("deploy_long", "deploy_lat"), crs = 4326)
+
+
 ### Make Simple Features for acoustic receivers   ################################
 # make bounding box for erie
 erie_bounds = c(xmin = -83.5338, ymin = 41.2569, xmax = -78.6614, ymax = 43.1208)
@@ -65,7 +85,7 @@ erie_bounds = st_bbox(erie_bounds) %>% #create new polygon of bounding box for i
   st_set_crs(4326)
 
 # calc dist of each receiver from boat ramp, also create SF of receivers
-lake_receivers %>%
+lake_receivers_filtered <- lake_receivers %>%
   dplyr::select(station, glatos_array, deploy_lat, deploy_long, deploy_date_time, recover_date_time) %>%
   as_tibble %>%
   mutate(deploy_date = date(deploy_date_time),
@@ -74,10 +94,10 @@ lake_receivers %>%
   filter(recover_date > "2018-09-01", !is.na(recover_date)) %>%
   st_as_sf(coords = c("deploy_long", "deploy_lat"), crs = 4326) %>%
   st_intersection(erie_bounds) %>%
-  mutate(dist_from_ramp = as.double(round(st_distance(., release_site),digits = 1))) -> lake_receivers_filtered
+  mutate(dist_from_ramp = as.double(round(st_distance(., release_site),digits = 1)))
 
 #same, for receivers still in the lake
-lake_receivers %>%
+lake_receivers_at_large <- lake_receivers %>%
   dplyr::select(station, glatos_array, deploy_lat, deploy_long, deploy_date_time, recover_date_time) %>%
   as_tibble %>%
   mutate(deploy_date = date(deploy_date_time),
@@ -86,7 +106,7 @@ lake_receivers %>%
   filter(is.na(recover_date)) %>%
   st_as_sf(coords = c("deploy_long", "deploy_lat"), crs = 4326) %>%
   st_intersection(erie_bounds) %>%
-  mutate(dist_from_ramp = as.double(round(st_distance(., release_site), digits = 1))) -> lake_receivers_at_large
+  mutate(dist_from_ramp = as.double(round(st_distance(., release_site), digits = 1)))
 
 
 # number of receivers during project
@@ -173,14 +193,16 @@ main_lake_fish_locs %>%
 
 # interpolate fish paths - makes daily paths between detection events
 # # use transition layer to get fish to avoid land - need to make a proper layer here!
-# main_lake_paths = interpolate_path(main_lake_fish_locs,
+# main_lake_paths = interpolate_path(main_lake_fish_locs #%>%
+#                                      #filter(detection_date < release_date+(365*2)), use this to trim off final data
 #                                    trans = erie_trans$transition,
 #                                    out_class = "tibble",
 #                                    lnl_thresh = 1.1, # threshold for linear/nonlinear interp - default = .9, working = 1.1
 #                                    int_time_stamp = (86400/2)) #time step for interpolation; 86400 = 1 day
 # 
-# saveRDS(main_lake_paths, file = "data/main_lake_paths3.RDS")
-main_lake_paths = readRDS(file = "data/main_lake_paths3.RDS")
+# saveRDS(main_lake_paths, file = "data/main_lake_paths_2_years.RDS")
+ # going with 2 years of data
+main_lake_paths = readRDS(file = "data/main_lake_paths_2_years.RDS")
 
 # reformat path points 
 main_lake_paths <- main_lake_paths %>%
@@ -200,4 +222,4 @@ main_lake_paths <- main_lake_paths %>%
 #   st_cast("LINESTRING") %>%
 #   mapview()+mapview(erie_trans$rast, maxpixels =  10035900)
 
-
+         

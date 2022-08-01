@@ -12,7 +12,7 @@ lake_erie <- st_transform(lake_erie, crs = 3175)
 
 ### Format Receiver object   #############################################
 #and receiver waypoints
-lake_receivers <- read_glatos_receivers("data/GLATOS_receiverLocations_20210202_142346.csv")
+lake_receivers <- read_glatos_receivers("data/GLATOS Export/GLATOS_receiverLocations_20220617_131806.csv")
 
 # for clipping geoms, this box is all of lake erie: 
 le_bounds<- st_bbox(c(xmin = -84.6599, ymin = 40.5407, xmax = -77.8264, ymax = 42.90138)) %>% 
@@ -30,7 +30,8 @@ lake_receivers <- lake_receivers %>%
   st_difference(lsc_bounds) %>%
   st_transform(crs = 3175) #convert to NAD83 - Great Lakes (default for make_trans below, otherwise wouldn't work)
 
-mapview(lake_receivers)+mapview(lake_erie)
+mapview(lake_receivers)+
+  mapview(lake_erie)
 
 ### Make Transition layer    ##################################
 memory.limit(size = 1000000)
@@ -41,8 +42,6 @@ lake_erie_transition <- make_transition3(poly = lake_erie,
                                          res = c(0.001, 0.001))
 
 saveRDS(lake_erie_transition, "data/erie_trans_layer.rds")
-
-mapview(lake_erie_transition$rast)
 
 
 # Making transition layer...
@@ -55,5 +54,8 @@ mapview(lake_erie_transition$rast)
 # Error: no more error handlers available (recursive errors?); invoking 'abort' restart
 
 lake_erie_transition <- readRDS("data/erie_trans_layer.rds")
+
+mapview(lake_erie_transition$rast)+
+  mapview(lake_receivers)
 
 

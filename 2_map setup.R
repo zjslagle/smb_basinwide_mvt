@@ -122,4 +122,3 @@ main_lake_frame <- st_bbox(main_lake_bbox) %>%
   st_set_crs(4326)
 
 main_lake_frame <- st_transform(main_lake_frame, crs = 32617)
-

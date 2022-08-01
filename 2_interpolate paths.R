@@ -1,7 +1,7 @@
 source("1_data format.R")
 ### Interpolate paths between detections    #####################################
 
-data_det_filtered %>%
+main_lake_fish_locs %>%
   filter(is.na(detection_timestamp_utc))
 
 # read in erie transition layer
@@ -10,7 +10,7 @@ erie_trans <- readRDS("data/erie_trans_layer.rds")
 
 # interpolate fish paths - makes daily paths between detection events
 # use transition layer to get fish to avoid land - need to make a proper layer here!
-interp_points = interpolate_path(data_det_filtered, 
+interp_points = interpolate_path(main_lake_fish_locs, 
                                    trans = erie_trans$transition,
                                    out_class = "tibble",
                                    lnl_thresh = 12, # threshold for linear/nonlinear interp - default = .9, 
@@ -33,4 +33,5 @@ interp_points %>%
   mapview()#+mapview(erie_trans$rast, maxpixels =  10035900)
 
 #now save it
-saveRDS(interp_points, file = "data sources/locations_interpolated.RDS")
+saveRDS(interp_points, file = "data/locations_interpolated.RDS")
+interp_points <- readRDS(file = "data/locations_interpolated.RDS")

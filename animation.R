@@ -1,6 +1,6 @@
-require("gdistance"); require("raster"); require("sp"); require("gganimate")
 
-source("movement summaries.R")
+
+source("3_movement summaries.R")
 
 ### Bounding boxes and frames     #######################
 #create bounding box:
@@ -69,8 +69,13 @@ ggplot(data = main_lake_paths)+
              pch = 21, color = "black", fill = "darkgreen", size = 5)+
   geom_sf(data = lake_receivers_filtered, pch = 18, lwd = 2, fill = "black")+
   theme(plot.title = element_text(size = 20, face = "bold"),
-        axis.text = element_blank(), axis.ticks = element_blank(), 
+        axis.text = element_blank(), axis.ticks = element_blank(),
         axis.title = element_blank(), legend.position = "none")+
+  ggsn::scalebar(dist = 10, model = "WGS84",location = "topleft", dist_unit = "km", 
+                 x.min = main_lake_bbox["xmin"], y.min = main_lake_bbox["ymin"], 
+                 x.max = main_lake_bbox["xmax"], y.max = main_lake_bbox["ymax"],
+                 st.dist = .03, anchor = c(x = -83.37, y = 41.45), family = "Times", transform = TRUE,
+                 border.size = .1)+
   labs(title = move_map_title) -> bass_move_map
 
 
@@ -106,7 +111,7 @@ bass_move_map+
 #create animation!
 animated_bass = animate(animated_bass_setup, 
                         nframes = 990,
-                        fps = 22,
+                        fps = 25,
                         #start_pause = 20, 
                         #end_pause = 20,
                         width = 10,    # PNG setup
@@ -117,7 +122,7 @@ animated_bass = animate(animated_bass_setup,
 
 
 #and save animation
-anim_save("figures/basin movement maps/SMB whole lake movement 2021 v4.gif", 
+anim_save("figures/basin movement maps/SMB whole lake movement 2022 PLEASE WORK.gif", 
           animation = animated_bass)
 
 ### Make GGplot map for single fish, setting up animation    ###################################################
@@ -128,7 +133,7 @@ st_geometry(interesting_fish) <- NULL
 interesting_fish <- interesting_fish %>% as_vector() %>% unique() 
 
 
-boundary_size = 0.3 # use this to adjust how big the map is around the bounding box
+boundary_size = 0.1 # use this to adjust how big the map is around the bounding box
 
 
 #loop over each interesting fish, make a PNG map
@@ -144,12 +149,14 @@ for(i in 1:length(interesting_fish)){
   bound_box <- detection_lines %>% filter(transmitter_id == target_fish) %>% st_bbox()
   total_dist_km = target_fish_line$total_dist_km
   last_detected = target_fish_line$last_detected
-
   
+  date_n <- nrow(target_fish_points %>% select(date) %>% unique())
+  trans_len = 1
+  state_len = 0
   
   #set up animation label
 move_map_title = paste("SMB ",
-                       interesting_fish,
+                       interesting_fish[i],
                        " - ",
                        "{unique(main_lake_paths$month[which(main_lake_paths$date == as.Date(closest_state))])}", #month
                        " ",
@@ -182,13 +189,18 @@ ggplot(data = target_fish_line)+
   theme(plot.title = element_text(size = 20, face = "bold"),
         axis.text = element_blank(), axis.ticks = element_blank(), 
         axis.title = element_blank(), legend.position = "none")+
-  labs(title = move_map_title) -> single_bass_move_map
+  labs(title = move_map_title)+
+ggsn::scalebar(dist = 10, model = "WGS84",location = "topleft", dist_unit = "km", 
+               x.min = main_lake_bbox["xmin"], y.min = main_lake_bbox["ymin"], 
+               x.max = main_lake_bbox["xmax"], y.max = main_lake_bbox["ymax"],
+               st.dist = .03, anchor = c(x = -83.4, y = 41.45), family = "Times", transform = TRUE,
+               border.size = .1) -> single_bass_move_map
 
 
 #bass_move_map
 
-# ggsave("figures/basin movement maps/test single fish animation map.png", 
-#        single_bass_move_map, width = 11, height = 9, units = "in") #use this to test map elements
+ggsave("figures/basin movement maps/test single fish animation map.png",
+       single_bass_move_map, width = 11, height = 9, units = "in") #use this to test map elements
 
 target_fish_points %>%
   dplyr::select(date) %>% unique %>% nrow()
@@ -196,23 +208,18 @@ target_fish_points %>%
 #set up animation:
 single_bass_move_map+
   transition_states(date, 
-                    transition_length = 0.1,
-                    wrap = FALSE)+
-  enter_fade()+
-  exit_fade()+
-  ease_aes('cubic-in-out')+
-  shadow_trail(distance = 0.005,
-               alpha = .4, size = 2)-> animated_bass_setup
+                    transition_length = 1,
+                    wrap = FALSE,
+                    state_length = state_len)+ #default = 1
+  enter_fade()+exit_fade()+
+  ease_aes('cubic-in-out')-> animated_bass_setup
 
 #create animation!
-animated_bass = animate(animated_bass_setup, #1619 frames
-                        nframes = 350, #animation setup; n rows needs to be something specific, 
-                        fps = 30,                                        #see error message when you get it wrong
-                        #duration = 60, #60 sec TEST
-                        #start_pause = 20, 
-                        #end_pause = 20,
-                        width = 10,    # PNG setup
-                        height = 6.5, 
+animated_bass = animate(animated_bass_setup,
+                        nframes = (date_n*trans_len)+(date_n*state_len-1), #animation setup; n rows needs to be something specific, 
+                        fps = 10,                                        #see error message when you get it wrong
+                        width = 11,    # PNG setup
+                        height = 9, 
                         units = "in",
                         res = 300, 
                         device = "png") 

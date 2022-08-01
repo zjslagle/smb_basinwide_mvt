@@ -1,6 +1,6 @@
 require("gdistance"); require("raster"); require("sp"); require("gganimate")
 
-source("movement summaries.R")
+source("3_movement summaries.R")
 
 bounds = c(xmin = -83.5605, ymin = 41.37740, xmax = -82.2669, ymax = 42.049)
 
