@@ -65,9 +65,12 @@ ggplot(data = main_lake_paths)+
                 aes(label = name), alpha = .85, family = "Times", fontface = "bold",
                 nudge_x = .3, nudge_y = -.15)+
   geom_sf(data = land_proj, fill = NA, lty = 4, lwd = 1, col = "slategrey")+ #add US/CAN border
-  geom_point(data = main_lake_paths, aes(x = longitude, y = latitude, group = date),
-             pch = 21, color = "black", fill = "darkgreen", size = 5)+
+  geom_point(data = main_lake_paths, 
+             aes(x = longitude, y = latitude, 
+                 group = date, fill = transmitter_id),
+             pch = 21, color = "black", size = 5)+
   geom_sf(data = lake_receivers_filtered, pch = 18, lwd = 2, fill = "black")+
+  scale_fill_viridis_d()+
   theme(plot.title = element_text(size = 20, face = "bold"),
         axis.text = element_blank(), axis.ticks = element_blank(),
         axis.title = element_blank(), legend.position = "none")+
@@ -122,7 +125,7 @@ animated_bass = animate(animated_bass_setup,
 
 
 #and save animation
-anim_save("figures/basin movement maps/SMB whole lake movement 2022 PLEASE WORK.gif", 
+anim_save("figures/basin movement maps/SMB whole lake movement 2022 v2.gif", 
           animation = animated_bass)
 
 ### Make GGplot map for single fish, setting up animation    ###################################################

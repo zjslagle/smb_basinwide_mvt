@@ -53,7 +53,6 @@ interpolated_lines <- interpolated_points %>%
             date_last_detected = max(date),
             censored_days = date_left_bay - release_date,
             do_union = F) %>% # do_union allows preservation of the order
-  #filter(!st_is(., "POINT")) %>%  #gets rid of trouble spots (shouldn't actually remove anything)
   st_cast("LINESTRING") %>%
   ungroup() %>%
   mutate(total_dist_km = round(st_length(.)/1000, 1))

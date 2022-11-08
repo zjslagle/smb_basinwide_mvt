@@ -1,0 +1,15 @@
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+*.docx
+*.png
+*.kml
+*.xlsx
+data/
+Innovasea/
+Interpolate_problems/
+JGLR Submission/
+data derived/
+figures/
+shapefiles/

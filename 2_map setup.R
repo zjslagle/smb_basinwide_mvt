@@ -16,7 +16,8 @@ urban_areas = st_read(paste0(map_dir, "ne_10m_urban_areas.shp"))  #cities
 lake_erie = st_read(paste0(map_dir, "Lake_Erie_Shoreline.shp"))
 great_lakes <- st_read(paste0(map_dir, "ne_10m_lakes.shp"))
 
-great_lakes <- great_lakes %>% filter(name_alt == "Great Lakes") # Great Lakes only (otherwise, this is all lakes)
+great_lakes <- great_lakes %>% filter(name_alt == "Great Lakes",
+                                      scalerank == 0) # Great Lakes only (otherwise, this is all lakes)
 
 
 #place_names %<>% filter(NAME %in% c("Lorain", "Sandusky"))
