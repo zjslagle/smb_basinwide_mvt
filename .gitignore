@@ -2,14 +2,16 @@
 .Rhistory
 .RData
 .Ruserdata
+.Ruserdata
 *.docx
 *.png
 *.kml
 *.xlsx
 data/
 Innovasea/
+shapefiles/
 Interpolate_problems/
 JGLR Submission/
 data derived/
 figures/
-shapefiles/
+.Rproj
