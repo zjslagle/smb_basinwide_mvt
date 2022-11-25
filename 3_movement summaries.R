@@ -58,9 +58,9 @@ interpolated_lines <- interpolated_points %>%
   mutate(total_dist_km = round(st_length(.)/1000, 1))
 
 # write to CSV
-interpolated_lines %>%
-  st_drop_geometry() %>%
-  write_csv("data derived/summary - lakewide mvt by fish and year.csv")
+# interpolated_lines %>%
+#   st_drop_geometry() %>%
+#   write_csv("data derived/summary - lakewide mvt by fish and year.csv")
 
 # Make lines by fish (all years combined)
 interpolated_lines_total <- interpolated_points %>%

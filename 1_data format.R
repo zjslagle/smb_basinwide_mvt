@@ -15,6 +15,7 @@ library(tidyverse)
 
 windowsFonts(Times=windowsFont("Times New Roman"))
 release_date = date("2018-09-23")
+release_dttm = as_datetime("2018-09-23 16:20:11")
 #### Data - read in and format detections from GLATOS  ########################
 
 release_site = st_as_sf(data.frame(Name = "Shelby St Boat Ramp", "Latitude" = 41.454647, "Longitude" = -82.723714),
@@ -185,11 +186,9 @@ main_lake_fish_locs <- lake_detections_filtered %>%
   full_join(recap_reports) %>% #join in recaps
   arrange(detection_date)
 
-main_lake_fish_locs %>%
-  filter(is.na(detection_timestamp_utc))
 
 # read in erie transition layer 
- erie_trans <- readRDS("data/erie_trans_layer.rds")
+# erie_trans <- readRDS("data/erie_trans_layer.rds")
 
 # interpolate fish paths - makes daily paths between detection events
 # # use transition layer to get fish to avoid land - need to make a proper layer here!
@@ -209,9 +208,18 @@ main_lake_paths <- main_lake_paths %>%
   filter(!is.na(animal_id)) %>%
   mutate(date = date(bin_timestamp),
          time_step = as.integer(date - release_date),
+         time_step_dttm = round(as.integer(bin_timestamp - release_dttm)/12,0),
          month = month(date, label = TRUE, abbr = FALSE),
          year = year(date),
          transmitter_id = substr(animal_id, 10, 15))
+
+# Fix for multiple locations on one day, making the animation look like there's 
+# two fish/fish shadowing every real fish. calc avg position per day.
+main_lake_paths <- main_lake_paths %>%
+  group_by(animal_id, transmitter_id, record_type, date, time_step, month, year) %>%
+  summarize(latitude = mean(latitude),
+            longitude = mean(longitude))
+
 # 
 # # # did interpolate_paths work?
 # main_lake_paths %>%

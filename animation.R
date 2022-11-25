@@ -1,6 +1,6 @@
-
-
 source("3_movement summaries.R")
+
+# ******** ANIMATION WILL NOT WORK ON THE ODW LAPTOP! USE PERSONAL LAPTOP! ****************#
 
 ### Bounding boxes and frames     #######################
 #create bounding box:
@@ -43,9 +43,9 @@ main_lake_bbox <- c(main_lake_bbox[c(1,2)]+.25,
 
 ### Make GGplot map for all fish, setting up animation     ###################################################
 #set up animation label
-move_map_title = paste("{unique(main_lake_paths$month[which(main_lake_paths$date == as.Date(closest_state))])}", #month
+move_map_title = paste("{unique(main_lake_paths$month[which(main_lake_paths$time_step == closest_state)])}", #month
                    " ",
-                   "{unique(main_lake_paths$year[which(main_lake_paths$date == as.Date(closest_state))])}",
+                   "{unique(main_lake_paths$year[which(main_lake_paths$time_step == closest_state)])}",
                    sep = "") #year
 
 ggplot(data = main_lake_paths)+
@@ -61,13 +61,10 @@ ggplot(data = main_lake_paths)+
   geom_sf_label(data = place_names %>% filter(name == "Cleveland"), 
                 aes(label = name), alpha = .85, family = "Times", fontface = "bold",
                 nudge_x = -.1, nudge_y = .05)+
-  geom_sf_label(data = place_names %>% filter(name == "Toledo"), 
-                aes(label = name), alpha = .85, family = "Times", fontface = "bold",
-                nudge_x = .3, nudge_y = -.15)+
   geom_sf(data = land_proj, fill = NA, lty = 4, lwd = 1, col = "slategrey")+ #add US/CAN border
   geom_point(data = main_lake_paths, 
              aes(x = longitude, y = latitude, 
-                 group = date, fill = transmitter_id),
+                 group = time_step, fill = transmitter_id),
              pch = 21, color = "black", size = 5)+
   geom_sf(data = lake_receivers_filtered, pch = 18, lwd = 2, fill = "black")+
   scale_fill_viridis_d()+
@@ -91,21 +88,24 @@ ggsave("figures/basin movement maps/test animation map.png",
 ### Animation - All fish ###########################################################################
 # animation (w/ transition_states) needs number of frames to be similar to cols, otherwise will
 #      give error about matching col numbers
-main_lake_paths %>% select(date) %>% unique %>% nrow()
+main_lake_paths %>% select(time_step) %>% unique %>% nrow()
 
 main_lake_paths %>%
   group_by(animal_id) %>%
-  summarize(n_days = n_distinct(date))
+  summarize(n_days = n_distinct(date),
+            n = n(),
+            n_2 = n/2)
 
 #set up animation:
 bass_move_map+
   #transition_time(date)-> animated_bass_setup
-  transition_states(date, 
-                    transition_length = 1,
+  transition_states(time_step, 
+                    transition_length = 0,
                     wrap = FALSE,
-                    state_length = 0)+ #default = 1
-  enter_fade()+exit_fade()+
-  ease_aes('cubic-in-out')-> animated_bass_setup
+                    state_length = 1)+ #default = 1
+  enter_fade()+
+  exit_fade()+
+  ease_aes('quadratic-in-out')-> animated_bass_setup
 
 # nframes is VERY specific - start with X = nrows of unique(date) - above.
 # nframes = (X * transition_length) + (X * state_length -1)
@@ -113,7 +113,7 @@ bass_move_map+
 
 #create animation!
 animated_bass = animate(animated_bass_setup, 
-                        nframes = 990,
+                        nframes = 990, #990 with date only
                         fps = 25,
                         #start_pause = 20, 
                         #end_pause = 20,
@@ -125,7 +125,7 @@ animated_bass = animate(animated_bass_setup,
 
 
 #and save animation
-anim_save("figures/basin movement maps/SMB whole lake movement 2022 v2.gif", 
+anim_save("figures/basin movement maps/SMB whole lake movement 2022 v5.gif", 
           animation = animated_bass)
 
 ### Make GGplot map for single fish, setting up animation    ###################################################

@@ -6,7 +6,7 @@ library(leaflet)
 library(magrittr)
 
 
-map_dir = "shapefiles/"      #local = "C:/Users/zakjs/Documents/Ohio DoW/Maps/"
+map_dir = "C:/Users/zakjs/Documents/Ohio DoW/Maps/"#"shapefiles/"      #local = "C:/Users/zakjs/Documents/Ohio DoW/Maps/"
 
 
 ### read in shapefiles   ###################################
@@ -123,3 +123,4 @@ main_lake_frame <- st_bbox(main_lake_bbox) %>%
   st_set_crs(4326)
 
 main_lake_frame <- st_transform(main_lake_frame, crs = 32617)
+
